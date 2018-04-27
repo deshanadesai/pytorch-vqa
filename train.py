@@ -98,14 +98,28 @@ def main():
 
     train_loader = data.get_loader(train=True)
     val_loader = data.get_loader(val=True)
+    print("data loaded")
+    
+    
+    model_new = torch.load('logs/2018-04-26_11:50:28.pth')
+    tokens = len(model_new['vocab']['question']) + 1
 
-    net = nn.DataParallel(model.Net(train_loader.dataset.num_tokens)).cuda()
+    net = nn.DataParallel(model.Net(tokens)).cuda()
+    net.load_state_dict(model_new['weights'])
+    print("Model loaded")
+    
+    #net = nn.DataParallel(model.Net(train_loader.dataset.num_tokens)).cuda()
+    
+    
+
     optimizer = optim.Adam([p for p in net.parameters() if p.requires_grad])
-
+    
+    
     tracker = utils.Tracker()
     config_as_dict = {k: v for k, v in vars(config).items() if not k.startswith('__')}
 
     for i in range(config.epochs):
+        print("Epoch "+str(i)+" started")
         _ = run(net, train_loader, optimizer, tracker, train=True, prefix='train', epoch=i)
         r = run(net, val_loader, optimizer, tracker, train=False, prefix='val', epoch=i)
 
